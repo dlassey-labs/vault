@@ -5,8 +5,11 @@
 ![HashiCorp Vault](https://img.shields.io/badge/HashiCorp_Vault-v2.0.3-black?style=flat-square&logo=vault&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=flat-square)
 
-> **DL Labs | Security Engineering**  
 > Centralized platform for secrets management, PKI, machine and workload identity, encryption, and security automation.
+
+**Security Engineering**
+
+### Vault — Centralized Security Platform for Secrets Management, PKI, Machine Identity & Encryption
 
 </div>
 
