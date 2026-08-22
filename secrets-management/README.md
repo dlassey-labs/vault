@@ -288,7 +288,7 @@ See [TF-001 — Terraform Proxmox Pipeline](https://github.com/dlassey-labs) for
 | ID | Improvement | Status |
 |----|-------------|--------|
 | SEC-003 | **Auto-unseal** — systemd-based script submitting Shamir keys sequentially on boot. Eliminates manual unseal after reboot | 🔵 Planned |
-| SEC-003 | **Reverse proxy** — expose Vault via `vault.dl.lab` on standard HTTPS port 443 via NPM or Traefik, eliminating `:8200` in all URLs | 🔵 Planned |
+
 
 ---
 
@@ -299,7 +299,7 @@ See [TF-001 — Terraform Proxmox Pipeline](https://github.com/dlassey-labs) for
 | SEC-001 | HashiCorp Vault — Secrets Management | ✅ Done |
 | SEC-002 | Vault PKI — Internal CA | ✅ Done |
 | SEC-003 | Vault Auto-Unseal | 🔵 Planned |
-| TF-001 | Terraform Proxmox Pipeline | ✅ Done |
+| TF-001 | Terraform Proxmox Pipeline | 🔵 Planned |
 | ANS-001 | Ansible Control Node | 🔵 Planned |
 
 ---
