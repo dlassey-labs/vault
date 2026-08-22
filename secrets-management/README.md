@@ -3,7 +3,7 @@
 #  HashiCorp Vault — Secrets Management (KV v2)
 
 ![HashiCorp Vault](https://img.shields.io/badge/HashiCorp_Vault-v1.21.4-black?style=flat-square&logo=vault&logoColor=white)
-#![TLS](https://img.shields.io/badge/TLS-Enabled-green?style=flat-square)
+![TLS](https://img.shields.io/badge/TLS-Enabled-green?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=flat-square)
 
 ---
