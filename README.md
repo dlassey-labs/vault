@@ -1,332 +1,119 @@
 <div align="center">
 
-#  HashiCorp Vault — Secrets Management (KV v2)
+# 🔐 HashiCorp Vault — DL Labs
 
-![HashiCorp Vault](https://img.shields.io/badge/HashiCorp_Vault-v1.21.4-black?style=flat-square&logo=vault&logoColor=white)
-![TLS](https://img.shields.io/badge/TLS-Enabled-green?style=flat-square)
-![Storage](https://img.shields.io/badge/Storage-File_Backend-blue?style=flat-square)
+![HashiCorp Vault](https://img.shields.io/badge/HashiCorp_Vault-v2.0.3-black?style=flat-square&logo=vault&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=flat-square)
 
----
-> **DL Labs |  SEC-001**
-> Part of the [DL Labs](https://github.com/dlassey-labs) self-hosted infrastructure programme.
----
+> **DL Labs | Security Engineering**  
+> Centralized platform for secrets management, PKI, machine and workload identity, encryption, and security automation.
+
 </div>
 
+---
 
 ## Overview
 
-This project documents the deployment and configuration of **HashiCorp Vault** as a centralized secrets management solution in the DL Labs platform.
+This repository documents the implementation and evolution of **HashiCorp Vault** within the DL Labs platform.
 
-Scope of this document: **KV v2 secrets engine only.**
-PKI, Root CA, Intermediate CA, and TLS certificate issuance are documented separately (SEC-002).
+Vault provides a centralized security foundation for managing secrets, issuing certificates, establishing machine and workload identities, and protecting sensitive data across the infrastructure.
 
-**Key outcomes:**
-
-- Vault deployed with TLS enabled on an internal DNS hostname
-- KV v2 engine enabled for structured secret storage
-- Dedicated policies and tokens per consuming identity
-- Secrets taxonomy defined for infrastructure, API keys, SSH credentials, and applications
-- Root token never used for automation — principle of least privilege enforced
+The implementation follows an incremental approach: each capability is deployed, validated in the lab, documented, and progressively integrated with other DL Labs services.
 
 ---
 
-## Environment
+## Capabilities
 
-| Parameter | Value |
-|-----------|-------|
-| Vault version | v1.21.4 (OSS) |
-| TLS | Enabled |
-| Internal DNS | `vault.dl.lab` (replace with your internal domain) |
-| KV engine path | `secret/` |
-| Storage backend | File (single-node lab) |
-| Seal type | Shamir (5 shares, threshold 3) |
-
----
-
-## Installation
-
-Vault is installed from the official HashiCorp APT repository.
-
-```bash
-sudo apt update
-sudo apt install -y gpg wget
-
-wget -O- https://apt.releases.hashicorp.com/gpg \
-  | sudo gpg --dearmor \
-  -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
-https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
-  | sudo tee /etc/apt/sources.list.d/hashicorp.list
-
-sudo apt update && sudo apt install vault -y
-vault version
-```
+| Capability | Description | Status |
+|---|---|---|
+| [Secrets Management](secrets-management/) | Centralized secrets management using KV v2 | ✅ Operational |
+| [PKI / TLS & HTTPS](pki/tls-https/) | Internal PKI and service certificate management | ✅ Operational |
+| [Auto-Unseal — AGE](auto-unseal/systemd-age/) | Automated Shamir unseal using AGE and systemd | ✅ Operational |
+| [Transit Auto-Unseal](auto-unseal/transit/) | Vault-to-Vault Transit Seal architecture | 🔵 Planned |
+| [Azure Key Vault Auto-Unseal](auto-unseal/azure-key-vault/) | Cloud-based KMS Auto-Unseal option | 🔵 Planned |
+| [mTLS](pki/mtls/) | Mutual TLS authentication between services | 🔵 Planned |
+| [SSH Certificates](pki/ssh-certificates/) | Vault-backed SSH certificate authority | 🔵 Planned |
+| [Vault Agent](vault-agent/) | Automated secret and certificate delivery and renewal | 🔵 Planned |
+| [Transit Encryption](transit/) | Encryption-as-a-Service using the Transit secrets engine | 🔵 Planned |
 
 ---
 
-## TLS Configuration
-
-Vault is configured to use TLS. Certificates are issued by the internal Vault PKI (SEC-002) or pre-provisioned manually for bootstrap.
-
-See `vault.hcl.example` in this repository for a ready-to-use configuration template.
-
-`/etc/vault.d/vault.hcl`:
-
-```hcl
-ui = true
-
-storage "file" {
-  path = "/opt/vault/data"
-}
-
-listener "tcp" {
-  address     = "0.0.0.0:8200"
-  tls_disable = 0
-
-  tls_cert_file = "/opt/vault/tls/vault.crt"
-  tls_key_file  = "/opt/vault/tls/vault.key"
-}
-
-api_addr     = "https://vault.dl.lab:8200"
-cluster_addr = "https://vault.dl.lab:8201"
-```
-
-> Replace `vault.dl.lab` with your internal DNS domain.
-
----
-
-## Initialization & Unsealing
-
-```bash
-export VAULT_ADDR="https://vault.dl.lab:8200"
-
-# Initialize — generates unseal keys and root token
-vault operator init
-```
-
-> **Security note:** Store unseal keys and the root token in a secure offline location immediately. These are shown only once.
-
-```bash
-# Unseal (repeat 3 times with different keys)
-vault operator unseal
-
-# Verify
-vault status
-# Expected: Sealed = false
-```
-
----
-
-## Login
-
-```bash
-vault login
-# Enter root token or a valid token with appropriate policies
-```
-
----
-
-## KV v2 Engine
-
-```bash
-# Verify existing engines
-vault secrets list
-
-# Enable KV v2
-vault secrets enable -path=secret kv-v2
-
-# Verify
-vault secrets list
-# Expected: secret/ kv
-```
-
----
-
-## Secrets Taxonomy
-
-Secrets are organized by target system and consuming identity:
-
-```
-secret/
-├── infra/
-│   ├── ansible       # Proxmox API token for Ansible
-│   ├── terraform     # Proxmox API token for Terraform
-│   ├── proxmox       # Admin credentials
-│   ├── opnsense      # Firewall credentials
-│   ├── pbs           # Backup server credentials
-│   └── truenas       # Storage credentials
-│
-├── api/
-│   ├── openai
-│   ├── openrouter
-│   ├── tavily
-│   ├── gitlab
-│   └── n8n
-│
-├── ssh/
-│   ├── proxmox
-│   └── workstation
-│
-└── apps/
-    ├── keycloak
-    ├── vault
-    
-```
-
-**Naming convention:** `secret/<target_system>/<consuming_identity>`
-
----
-
-## Secret Operations
-
-### Write a secret
-
-```bash
-vault kv put secret/infra/ansible \
-  proxmox_token_id="<token-id>" \
-  proxmox_token_secret="<token-secret>"
-```
-
-### Read a secret
-
-```bash
-vault kv get secret/infra/ansible
-
-# Read a single field
-vault kv get -field=proxmox_token_secret secret/infra/ansible
-```
-
-### Update (creates a new version automatically)
-
-```bash
-vault kv put secret/infra/ansible \
-  proxmox_token_id="<token-id>" \
-  proxmox_token_secret="<new-secret>"
-```
-
-### Delete
-
-```bash
-vault kv delete secret/infra/ansible
-```
-
----
-
-## Policies
-
-Each consuming identity gets a dedicated policy scoped to its own path.
-
-Example — read-only policy for Ansible (see `policies/ansible-policy.hcl.example`):
-
-```hcl
-path "secret/data/infra/ansible" {
-  capabilities = ["read"]
-}
-```
-
-```bash
-# Load the policy
-vault policy write ansible ansible-policy.hcl
-
-# Create a dedicated token
-vault token create -policy=ansible
-```
-
----
-
-## Integration with Terraform
-
-Vault secrets are consumed by Terraform via the Vault provider. The token is passed through environment variables — never stored in `.tfvars` files committed to source control.
-
-```bash
-export VAULT_TOKEN="<automation-token>"
-export VAULT_ADDR="https://vault.dl.lab:8200"
-```
-
-See [TF-001 — Terraform Proxmox Pipeline](https://github.com/dlassey-labs) for the full integration.
-
----
-
-## Key Decisions & Lessons Learned
-
-| Decision | Rationale |
-|----------|-----------|
-| TLS enabled from day one | Vault transmits credentials — plaintext is never acceptable, even on internal networks |
-| Internal DNS hostname, not IP | Allows certificate CN matching; decouples Vault from its IP address |
-| Root token never used for automation | Dedicated tokens with scoped policies enforce least privilege |
-| KV v2 over KV v1 | Built-in versioning, soft-delete, and metadata support |
-| Secrets Management separated from PKI docs | Different lifecycle and audience — PKI documented in SEC-002 |
-| File backend (single node) | Sufficient for a single-node lab; Raft backend documented as migration path for HA |
-
----
-
-## Deployment Evidence
-
-> Real deployment on DL Labs infrastructure — single-node Proxmox LXC, TLS enabled, KV v2 active.
-
-### Vault Dashboard (UI)
-
-![Vault Dashboard](screenshot/vault-ui-dashboard.png)
-*Vault v1.21.4 — TLS enabled, API_ADDR: `https://vault.dl.lab:8200`, Storage: file*
-
-### Secrets Engine & KV Structure (UI)
-
-![Secrets Structure](screenshot/vault-ui-secrets-structure.png)
-*KV v2 engine active — organized taxonomy: `infra/`, `api/`, `ssh/`*
-
-### CLI Overview
-
-![CLI Overview](screenshot/vault-cli-overview.png)
-*`vault status` → Sealed: false | `vault secrets list` → all engines | `vault kv list` → taxonomy*
-
----
-
-## Roadmap & Planned Improvements
-
-| ID | Improvement | Status |
-|----|-------------|--------|
-| SEC-003 | **Auto-unseal** — systemd-based script submitting Shamir keys sequentially on boot. Eliminates manual unseal after reboot | 🔵 Planned |
-| SEC-003 | **Reverse proxy** — expose Vault via `vault.dl.lab` on standard HTTPS port 443 via NPM or Traefik, eliminating `:8200` in all URLs | 🔵 Planned |
-
----
-
-## Related Projects
-
-| ID | Project | Status |
-|----|---------|--------|
-| SEC-001 | HashiCorp Vault — Secrets Management | ✅ Done |
-| SEC-002 | Vault PKI — Internal CA | ✅ Done |
-| SEC-003 | Vault Auto-Unseal | 🔵 Planned |
-| TF-001 | Terraform Proxmox Pipeline | ✅ Done |
-| ANS-001 | Ansible Control Node | 🔵 Planned |
+## Security Posture
+
+- **Centralized Secrets Management** — credentials, API keys, and sensitive configuration are centrally managed through Vault
+- **PKI & Certificate Management** — internal certificate issuance and lifecycle management through the DL Labs PKI
+- **Least Privilege** — Vault policies restrict access to the minimum permissions required
+- **Machine & Workload Identity** — applications and automation progressively move away from human or static credentials
+- **Automated Security Operations** — unseal, secret delivery, certificate renewal, and rotation are progressively automated
+- **Encryption Services** — Vault Transit provides centralized cryptographic services without exposing encryption keys
 
 ---
 
 ## Repository Structure
 
-```
-DL-LABS / SECURITY / VAULT /
-├── vault/
-│   ├── README.md                          # This document
-│   ├── vault.hcl.example                  # Vault configuration template
-│   ├── screenshot/
-│   │   ├── vault-ui-dashboard.png         # Vault UI — dashboard & config details
-│   │   ├── vault-ui-secrets-structure.png # Vault UI — KV v2 secrets taxonomy
-│   │   └── vault-cli-overview.png         # CLI — status, secrets list, kv list
-
-
+```text
+vault/
+├── README.md
+│
+├── secrets-management/
+│   └── README.md
+│
+├── pki/
+│   ├── README.md
+│   ├── tls-https/
+│   │   └── README.md
+│   ├── mtls/
+│   └── ssh-certificates/
+│
+├── auto-unseal/
+│   ├── README.md
+│   ├── systemd-age/
+│   │   └── README.md
+│   ├── transit/
+│   └── azure-key-vault/
+│
+├── vault-agent/
+│
+├── transit/
+│
+└── operations/
+    ├── commands-reference.md
+    ├── troubleshooting.md
+    ├── backup-restore.md
+    └── upgrade.md
 ```
 
 ---
 
+## Documentation
 
-## 👤 Author
+### Secrets Management
+- [Secrets Management](secrets-management/)
 
-**Dosseh Lassey**
-Founder, DL-LABS - Where Infrastructure Meets Intelligence ·
-Infrastructure · Engineering · Automation · AI
+### PKI & Certificates
+- [PKI](pki/)
+- [TLS & HTTPS](pki/tls-https/)
+- [mTLS](pki/mtls/)
+- [SSH Certificates](pki/ssh-certificates/)
+
+### Auto-Unseal
+- [Auto-Unseal](auto-unseal/)
+- [systemd + AGE](auto-unseal/systemd-age/)
+- [Transit Auto-Unseal](auto-unseal/transit/)
+- [Azure Key Vault](auto-unseal/azure-key-vault/)
+
+### Security Automation & Encryption
+- [Vault Agent](vault-agent/)
+- [Transit Encryption](transit/)
+
+### Operations
+- [Operations](operations/)
 
 ---
 
+<div align="center">
+
+**DL-LABS — Building Modern Enterprise Platforms**  
+*From Infrastructure to Intelligent Systems*
+
+</div>
