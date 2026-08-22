@@ -7,9 +7,6 @@
 
 > Centralized platform for secrets management, PKI, machine and workload identity, encryption, and security automation.
 
-**Security Engineering**
-
-### Vault — Centralized Security Platform for Secrets Management, PKI, Machine Identity & Encryption
 
 </div>
 
@@ -113,6 +110,14 @@ vault/
 - [Operations](operations/)
 
 ---
+
+## 👤 Author
+
+**Dosseh Lassey**  
+Founder, DL-LABS — Infrastructure · Engineering · Automation · Security · AI
+
+---
+
 
 <div align="center">
 
