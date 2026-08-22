@@ -3,7 +3,7 @@
 #  HashiCorp Vault — Secrets Management (KV v2)
 
 ![HashiCorp Vault](https://img.shields.io/badge/HashiCorp_Vault-v1.21.4-black?style=flat-square&logo=vault&logoColor=white)
-![TLS](https://img.shields.io/badge/TLS-Enabled-green?style=flat-square)
+#![TLS](https://img.shields.io/badge/TLS-Enabled-green?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=flat-square)
 
 ---
@@ -243,8 +243,6 @@ Vault secrets are consumed by Terraform via the Vault provider. The token is pas
 export VAULT_TOKEN="<automation-token>"
 export VAULT_ADDR="https://vault.dl.lab:8200"
 ```
-
-See [TF-001 — Terraform Proxmox Pipeline](https://github.com/dlassey-labs) for the full integration.
 
 ---
 
