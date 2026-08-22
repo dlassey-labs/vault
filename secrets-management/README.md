@@ -4,7 +4,6 @@
 
 ![HashiCorp Vault](https://img.shields.io/badge/HashiCorp_Vault-v1.21.4-black?style=flat-square&logo=vault&logoColor=white)
 ![TLS](https://img.shields.io/badge/TLS-Enabled-green?style=flat-square)
-![Storage](https://img.shields.io/badge/Storage-File_Backend-blue?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Operational-success?style=flat-square)
 
 ---
@@ -264,7 +263,7 @@ See [TF-001 — Terraform Proxmox Pipeline](https://github.com/dlassey-labs) for
 
 ## Deployment Evidence
 
-> Real deployment on DL Labs infrastructure — single-node Proxmox LXC, TLS enabled, KV v2 active.
+> Real deployment on DL Labs infrastructure — TLS enabled, KV v2 active.
 
 ### Vault Dashboard (UI)
 
