@@ -424,16 +424,6 @@ done
 | Cleartext private keys in JSON | Vault API responses contain private keys in cleartext. Use `shred -u` to securely delete these files — standard `rm` leaves recoverable data. |
 | Vault re-seals on reboot | Intentional security mechanism (Shamir secret sharing). Resolved with `vault operator unseal` or systemd-based auto-unseal. |
 
-## Key Decisions & Technical Notes
-
-| Decision / Consideration | Rationale |
-|---|---|
-| Firefox trust store | Firefox may use a certificate store separate from the operating system trust store. The DL Labs Root CA must therefore be imported separately where required. |
-| Certificate chain validation | TLS services must provide the required certificate chain so clients can build a valid path from the end-entity certificate to the trusted Root CA. |
-| Intermediate CA constraints | The Intermediate CA is signed with `basicConstraints = CA:TRUE` to enforce proper CA semantics and compatibility with Vault PKI. |
-| Certificate re-issuance | Re-issuance does not automatically invalidate previously issued certificates; superseded certificates are revoked when required. |
-| Private key handling | Vault-generated private keys returned through API responses are treated as sensitive transient material and temporary response files are securely removed. |
-| Application-specific TLS integration | Reverse proxy termination is the default for standard services; direct certificate deployment is retained for applications with incompatible hostname or authentication dependencies. |
 
 ---
 
